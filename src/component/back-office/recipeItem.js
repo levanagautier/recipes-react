@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { IngredientInput } from './ingredientInput';
+import { UtensilInput } from './utensilInput';
 
 export function RecipeItem () {
     const { id } = useParams();
@@ -8,7 +9,6 @@ export function RecipeItem () {
     const [steps, setSteps] = useState([]);
     const [utensils, setUtensils] = useState([]);
     const [ingredients, setIngredients] = useState([])
-    const units = ['', 'g', 'mg', 'l', 'cl', 'ml']
 
     useEffect(() => {
         const fetchData = async () => {
@@ -30,10 +30,8 @@ export function RecipeItem () {
                         step
                     ]))
                 }
-            }
-                
-    
-            )
+            })
+
             setIngredients(...recipe.subRecipes.map(subrecipe => {
                 return (subrecipe.Ingredient.map(ingredient => {
                     return {
@@ -43,23 +41,16 @@ export function RecipeItem () {
                         unit: ingredient["subrecipes-ingredients"].unit,
                         prepNotes: ingredient["subrecipes-ingredients"].prepNotes,
                     }
-                }
-    
-                   ))
+                }))
             }))
 
             setUtensils(...recipe.subRecipes.map(subrecipe => {
-        
                 return subrecipe.Utensil.map(utensil => {
-    
                     return {
                         id : utensil.id,
                         name: utensil.name    
                     }
-    
-                }
-                    
-                   )
+                })
             }))
         }
     }, [recipe])
@@ -88,15 +79,6 @@ export function RecipeItem () {
                 "title": recipe.title
             })
         }).then(console.log)
-
-
-        /*
-
-        1°) fetch (POST)
-        2°) then (200) => pop-in (up?)
-        3°) catch (403, 400) => affiche le message de l'API
-
-        */
     }
 
     const handleTitleChange = (e) => {
@@ -106,31 +88,31 @@ export function RecipeItem () {
         }))
     }
 
-    const handleIngQtyChange = (e, ingredientId) => {
-        setIngredients(prevState => prevState.map(ingredient => {
-            if(ingredient.id === ingredientId) {
-                return {
-                    ...ingredient,
-                    qty: e.target.value
-                }
-            }
-            return ingredient
-        }))
+    // const handleIngQtyChange = (e, ingredientId) => {
+    //     setIngredients(prevState => prevState.map(ingredient => {
+    //         if(ingredient.id === ingredientId) {
+    //             return {
+    //                 ...ingredient,
+    //                 qty: e.target.value
+    //             }
+    //         }
+    //         return ingredient
+    //     }))
        
-    }
+    // }
 
-    const handleIngUnitChange = (e, ingredientId) => {
-        e.preventDefault();
-        setIngredients(prevState => prevState.map(ingredient => {
-            if(ingredient.id === ingredientId) {
-                return {
-                    ...ingredient,
-                    unit: e.target.value
-                }
-            }
-            return ingredient
-        }))        
-    }
+    // const handleIngUnitChange = (e, ingredientId) => {
+    //     e.preventDefault();
+    //     setIngredients(prevState => prevState.map(ingredient => {
+    //         if(ingredient.id === ingredientId) {
+    //             return {
+    //                 ...ingredient,
+    //                 unit: e.target.value
+    //             }
+    //         }
+    //         return ingredient
+    //     }))        
+    // }
 
     const handleIngredientChange = ({target: {name, value}}, ingredientId) => {
         setIngredients(prevState => prevState.map(ingredient => {
@@ -151,6 +133,25 @@ export function RecipeItem () {
         ]))
     }
 
+     const handleUtensilChange = ({target: {name, value}}, utensilId) => {
+        setUtensils(prevState => prevState.map(utensil => {
+            if(utensil.id === utensilId) {
+                return {
+                    ...utensil,
+                    [name]: value
+                }
+            }
+            return utensil
+        }))
+    }
+
+    const addUtensil = () => {
+        setUtensils(prevState => ([
+            ...prevState,
+            {}
+        ]))
+    }
+
 
 
     if (recipe) {
@@ -159,40 +160,52 @@ export function RecipeItem () {
                 <h1><input type="text" value={recipe.title} name='recipe-title' onChange={handleTitleChange} /></h1>
                 <input type="submit" value="Envoyer"/>
 
+                
                 {recipe.subRecipes.map(subrecipe => (
-                    <section>
+                    <article>
                         <details className='ingredients__list'>
                             <summary>Ingrédients {subrecipe.title}</summary>
                             <ul>
                             {ingredients.length > 0 && ingredients.map(ingredient => (
-                                
-                                <IngredientInput {...ingredient} handleIngredientChange={handleIngredientChange} />
+
+                                <IngredientInput {...ingredient} handleIngredientChange={handleIngredientChange} key={ingredient.id} />
+
                             ))}
                             </ul>
                         </details>
                         <button type='button' onClick={addIngredient}>Ajouter un ingredient</button>
+                    </article>
+                    ))
+                }
 
+                {recipe.subRecipes.map(subrecipe => (
+                    <article>
                         <details className='utensils__list'>
                             <summary>Ustensiles {subrecipe.title}</summary>
                             <ul>
                             {subrecipe.Utensil.map(utensil => (
-                                <li>{utensil.name}</li>
+
+                                <UtensilInput {...utensil} handleUtensilChange={handleUtensilChange} key={utensil.id}/>
+                                
                             ))}
                             </ul>
-                            <button type='button'>Ajouter un ustensile</button>
+                            <button type='button' onClick={addUtensil}>Ajouter un ustensile</button>
                         </details>
+                    </article>
+                    ))
+                }
 
-                        <article className='instructions__list'>
-                            <h3>Instructions</h3>
-                            {steps.map((step, index) => (
-                            <div>
-                                <p>étape {index +1}</p>
-                                <p>{step}</p>
-                            </div>
-                            ))}
-                            <button type='button'>Ajouter une étape</button>
-                        </article>
-                    </section>
+                {recipe.subRecipes.map(subrecipe => (
+                    <article className='instructions__list'>
+                        <h3>Instructions</h3>
+                        {steps.map((step, index) => (
+                        <div>
+                            <p>étape {index +1}</p>
+                            <p>{step}</p>
+                        </div>
+                        ))}
+                        <button type='button'>Ajouter une étape</button>
+                    </article>
                     ))
                 }
             </form>
